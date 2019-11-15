@@ -1,2 +1,5 @@
 # 3D-Computer-Graphics-Lab3
-Computer graphics w/ modern C++
+## Requirement
+1. the latest Visual Studio 2017
+1. the latest Windows SDK
+1. C++17
