@@ -1,0 +1,66 @@
+800 600
+
+nobackfaces
+observer 0 0 3 0 0 0 0 1 100 45
+
+viewport -.5 .5 -.5 .5
+
+scale 4 0.5 0.5
+rotate 0 0 90
+translate 2 0 0
+object cube.asc
+
+display
+
+rotate 0 10 0
+object cube.asc
+
+display
+
+rotate 0 10 0
+object cube.asc
+
+display
+
+rotate 0 10 0
+object cube.asc
+
+display
+
+rotate 0 10 0
+object cube.asc
+
+display
+
+rotate 0 10 0
+object cube.asc
+
+display
+
+reset
+scale 4 0.5 0.5
+rotate 0 0 90
+translate 2 0 0
+rotate 0 60 0
+object cube.asc
+
+display
+
+reset
+scale 4 0.5 0.5
+rotate 0 0 90
+translate 2 0 0
+rotate 0 70 0
+object cube.asc
+
+display
+
+observer 0 3 3 0 0 0 0 1 100 45
+
+display
+
+observer -4 4 3 0 0 0 0 1 100 45
+
+display
+
+end

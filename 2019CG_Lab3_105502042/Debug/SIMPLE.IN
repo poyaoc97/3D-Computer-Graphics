@@ -1,0 +1,11 @@
+500 500
+
+object cube.asc
+
+viewport -1 1 -1 1
+
+observer 3 3 3 0 0 0 0 .1 1000 45
+
+display
+
+end

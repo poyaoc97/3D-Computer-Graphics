@@ -1,0 +1,17 @@
+600 600
+
+nobackfaces
+
+object teapot.asc
+
+observer 7 7 9 0 0 0 0 1 1000 20
+
+viewport -.8 .8 -.8 .8
+
+display
+
+observer 3 6 3 0 0 0 0 1 1000 20
+
+display
+
+end

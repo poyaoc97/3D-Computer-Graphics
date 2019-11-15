@@ -1,0 +1,27 @@
+700 700
+
+nobackfaces
+object cube.asc
+
+scale 1 2 1
+rotate 0 45 0
+object cube.asc
+
+observer 0 0 3 0 0 0 0 1 100 30
+
+viewport -0.2  0.4  0  0.4
+
+display
+
+reset
+scale 4 0.5  0.5
+rotate 0 0 90
+translate 2 0 0 
+rotate 45 0 0
+object cube.asc
+
+viewport 0.5  0.9  0  0.4
+
+display
+
+end

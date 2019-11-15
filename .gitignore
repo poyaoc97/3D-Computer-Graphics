@@ -17,7 +17,8 @@ ignored/
 
 # Build results
 **/[Dd]ebug/**
-!**/[Dd]ebug/*.in
+!**/[Dd]ebug/*.[Ii][Nn]
+!**/[Dd]ebug/*.asc
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/

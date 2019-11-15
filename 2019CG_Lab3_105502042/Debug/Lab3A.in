@@ -1,0 +1,59 @@
+500 500
+
+# makes a chair on a groundplane
+
+# ground plane
+nobackfaces 
+scale      5 .2 5 
+translate  1 -.1 1
+object cube.asc     
+
+# leg of chair
+reset
+scale      .05 .4 .05 
+translate  1.15 .2 1.15
+object cube.asc
+
+# leg of chair
+reset
+scale      .05 .4 .05   
+translate  1.15 .2 .85
+object cube.asc     
+
+# leg of chair
+reset
+scale      .05 .4 .05
+translate  .85 .2 .85
+object cube.asc     
+
+# leg of chair
+reset
+scale      .05 .4 .05
+translate  .85 .2 1.15
+object cube.asc     
+
+# seat of chair
+reset
+scale      .3 .05 .3
+translate  1  .425 1
+object cube.asc     
+
+# back of chair
+reset
+scale      .3 .5 .1
+translate  1  .7  .9
+object cube.asc     
+
+observer 2 .5 0 1 1 1 0 1 1000 30 
+
+viewport -.8 .3 -.8 .3
+
+display
+
+observer 3 4 5 0 0 0 10 1 1000 30
+
+viewport -.3 .8 -.3 .8
+
+display
+
+end
