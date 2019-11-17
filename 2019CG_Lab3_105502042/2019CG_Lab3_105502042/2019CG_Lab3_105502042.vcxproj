@@ -122,7 +122,10 @@
     <ClCompile Include="Lab3_105502042.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="my_utils.hpp" />
+    <ClInclude Include="MatrixKit.hpp" />
+    <ClInclude Include="DrawKit.hpp" />
+    <ClInclude Include="helper.hpp" />
+    <ClInclude Include="Object.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

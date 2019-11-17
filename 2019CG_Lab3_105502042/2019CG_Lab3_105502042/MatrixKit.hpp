@@ -1,25 +1,26 @@
 #pragma once
-
-#include <GL/glut.h>
-#include <algorithm>
 #include <array>
-#include <cmath>
-#include <cstddef>
+#include <chrono>
 #include <execution>
+#include <fstream>
 #include <iostream>
-#include <utility>
-#include <vector>
+#include <sstream>
 
-constexpr int point_size{1}; // the number of pixels a point maps to
+using namespace std::chrono;
 
 template<std::size_t N>
 using Matrix = std::array<std::array<double, N>, N>;
-template<std::size_t N>
-using Vector = std::array<double, N>;
+template<std::size_t N, typename T = double>
+using Vector = std::array<T, N>;
 template<std::size_t N>
 using Vertices = std::vector<Vector<N>>;
 template<std::size_t N>
 using Polygons = std::vector<Vertices<N>>;
+
+constexpr Matrix<4> identity_matrix{{{1, 0, 0, 0},
+                                     {0, 1, 0, 0},
+                                     {0, 0, 1, 0},
+                                     {0, 0, 0, 1}}};
 
 // just want a constexpr swap function
 template<typename T>
@@ -104,7 +105,7 @@ constexpr auto operator<<(std::ostream& out, const std::array<std::array<T, N>, 
 template<std::size_t N>
 inline auto operator<<(std::ostream& out, const Vertices<N>& vs) -> std::ostream& {
   for (const auto& v : vs)
-    out << '(' << v[0] << ", " << v[1] << ")\n";
+    out << '(' << v[0] << ", " << v[1] << ", " << v[2] << ")\n";
   return out;
 }
 
@@ -136,7 +137,7 @@ constexpr auto operator+(const std::array<T, N>& lhs, const std::array<T, N>& rh
 
 // return a scaling matrix
 template<std::size_t N>
-constexpr auto s_m(const double sx, const double sy, [[maybe_unused]] const double sz = 0) -> Matrix<N> {
+[[nodiscard]] constexpr auto scaling_m(const double sx, const double sy, [[maybe_unused]] const double sz = 0) -> Matrix<N> {
   if constexpr (N == 3)
     return {{{sx, 0, 0},
              {0, sy, 0},
@@ -150,7 +151,7 @@ constexpr auto s_m(const double sx, const double sy, [[maybe_unused]] const doub
 
 // return a translation matrix
 template<std::size_t N>
-constexpr auto t_m(const double dx, const double dy, [[maybe_unused]] const double dz = 0) -> Matrix<N> {
+[[nodiscard]] constexpr auto translation_m(const double dx, const double dy, [[maybe_unused]] const double dz = 0) -> Matrix<N> {
   if constexpr (N == 3)
     return {{{1, 0, dx},
              {0, 1, dy},
@@ -164,9 +165,11 @@ constexpr auto t_m(const double dx, const double dy, [[maybe_unused]] const doub
 
 // return a rotation matrix
 template<std::size_t N>
-inline auto r_m(const double radian, [[maybe_unused]] const char axis = 'z') -> Matrix<N> {
-  const double c{std::cos(radian)};
-  const double s{std::sin(radian)};
+[[nodiscard]] inline auto rotation_m(double degree, [[maybe_unused]] const char axis = 'z') -> Matrix<N> {
+  constexpr double pi{3.141'592'653'589'793'238'46};
+  degree *= pi / 180;
+  const double c{std::cos(degree)};
+  const double s{std::sin(degree)};
   if constexpr (N == 3)
     return {{{c, -s, 0},
              {s, c, 0},
@@ -188,79 +191,19 @@ inline auto r_m(const double radian, [[maybe_unused]] const char axis = 'z') -> 
                {0, 1, 0, 0},
                {-s, 0, c, 0},
                {0, 0, 0, 1}}};
+    default:
+      std::cerr << "rotation return identity!\n";
+      return identity_matrix;
     }
   }
-}
-
-template<std::size_t N>
-auto draw_line(const Vector<N>& endpoint1, const Vector<N>& endpoint2) {
-  // unpack data
-  int x1{static_cast<int>(std::round(endpoint1[0]))};
-  int y1{static_cast<int>(std::round(endpoint1[1]))};
-  int x2{static_cast<int>(std::round(endpoint2[0]))};
-  int y2{static_cast<int>(std::round(endpoint2[1]))};
-  // drawing logic begins
-  if (x2 < x1) { // let (x1, y1) be the point on the left
-    swap(x1, x2);
-    swap(y1, y2);
-  }
-  glPointSize(point_size);
-  glBegin(GL_POINTS);
-  glVertex2i(x1, y1); // draw the first point no matter wut
-
-  // preprocessing
-  bool neg_slope{y1 > y2};
-  if (neg_slope)         // see if the slope is negative
-    y2 += 2 * (y1 - y2); // mirror the line with respect to y = y1 for now, and voila, a positive slope line!
-                         // we draw this line as if the slope was positive in our head and draw it "upside down" on the screen in the while loop
-  bool slope_grt_one{(y2 - y1) > (x2 - x1)};
-  if (slope_grt_one) { // slope greater than 1, swap x and y,  mirror the line with respect to y = x for now, mirror it again when drawing
-    swap(x1, y1);
-    swap(x2, y2);
-  }
-  int x{x1};
-  int y{y1};
-  int a{y2 - y1};
-  int b{x1 - x2};
-  int d{2 * a + b};
-  while (x < x2) { // draw from left to right (recall that we make x2 be always on the right)
-    if (d <= 0) {  // choose E
-      d += 2 * a;
-      if (slope_grt_one)                                    // sort of "mirror" the negative slope line back to where it's supposed to be
-        glVertex2i(y, !neg_slope ? (++x) : (2 * x1 - ++x)); // slope > 1 y is actually x and vice versa
-      else
-        glVertex2i(++x, !neg_slope ? (y) : (2 * y1 - y));
-    } else { // choose NE
-      d += 2 * (a + b);
-      if (slope_grt_one)
-        glVertex2i(++y, !neg_slope ? (++x) : (2 * x1 - ++x));
-      else
-        glVertex2i(++x, !neg_slope ? (++y) : (2 * y1 - ++y));
-    }
-  }
-  glEnd();
-}
-
-template<std::size_t N>
-inline auto draw_polygon(const Vertices<N>& vs) {
-  if (!vs.size())
-    return;
-  draw_line(vs.front(), vs[1]);
-  draw_line(vs.front(), vs.back());
-  for (auto it = vs.cbegin() + 1; it != vs.cend(); ++it)
-    draw_line(*(it - 1), *it);
-}
-
-template<std::size_t N>
-inline auto draw_polygons(const Polygons<N>& ps) {
-  for (const auto& vs : ps)
-    draw_polygon(vs);
 }
 
 // apply a transformation to all vertices of a polygon
 template<std::size_t N>
-inline auto transformed_vs(const Matrix<N>& t, const Vertices<N>& vs) -> Vertices<N> {
-  Vertices<N> ret{vs.size()};
+[[nodiscard]] inline auto transformed_vs(const Matrix<N>& t, const Vertices<N>& vs) -> Vertices<N> {
+  auto size = vs.size();
+  // std::cout << "Number of vertices: " << size << '\n';
+  Vertices<N> ret{size};
   std::transform(std::execution::seq,
                  vs.cbegin(),
                  vs.cend(),
@@ -269,12 +212,13 @@ inline auto transformed_vs(const Matrix<N>& t, const Vertices<N>& vs) -> Vertice
   return ret;
 }
 
-// apply a transformation to polygons
+// apply a transformation to a vector of vertices
 template<std::size_t N>
-inline auto transformed_ps(const Matrix<N>& t, const Polygons<N>& ps) -> Polygons<N> {
+[[nodiscard]] inline auto transformed_ps(const Matrix<N>& t, const Polygons<N>& ps) -> Polygons<N> {
   auto size = ps.size();
+  // std::cout << "Number of polygons: " << size << '\n';
   Polygons<N> ret{size};
-  if (50 < size)
+  if (100 < size) // arbitrary threshold
     std::transform(std::execution::par_unseq,
                    ps.begin(),
                    ps.end(),
@@ -288,8 +232,3 @@ inline auto transformed_ps(const Matrix<N>& t, const Polygons<N>& ps) -> Polygon
                    [&](auto& vs) { return transformed_vs(t, vs); });
   return ret;
 }
-
-#define clear_screen()              \
-  glClearColor(0.0, 0.0, 0.0, 0.0); \
-  glClear(GL_COLOR_BUFFER_BIT);     \
-  glFlush()
