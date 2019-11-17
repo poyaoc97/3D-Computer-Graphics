@@ -11,7 +11,7 @@ class Object {
   std::vector<Face> faces;
 
 public:
-  Object(std::string s, size_t v, size_t f) : file_name{s}, v_count{v}, f_count{f}, vs{v}, faces{f} {}
+  Object(std::string_view s, size_t v, size_t f) : file_name{s}, v_count{v}, f_count{f}, vs{v}, faces{f} {}
   auto set_vertex(std::stringstream& ss, std::ifstream& asc_file, const Matrix<4>& TM);
   auto set_face(std::stringstream& ss, std::ifstream& asc_file);
   [[nodiscard]] auto get_name() { return file_name; }
