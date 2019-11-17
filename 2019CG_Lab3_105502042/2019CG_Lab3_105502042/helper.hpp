@@ -78,6 +78,8 @@ inline auto process_object(std::stringstream& ss, std::vector<Object>& objects, 
 }
 
 inline auto process_observer(std::stringstream& ss, Viewport& vp, const Matrix<4>& observer_M) {
+  double Ex, Ey, Ez, COIx, COIy, COIz, Tilt, Hither, Yon, Hav;
+  ss >> Ex >> Ey >> Ez >> COIx >> COIy >> COIz >> Tilt >> Hither >> Yon >> Hav;
 }
 
 inline auto process_display(std::stringstream& ss, Viewport& vp, std::vector<Object>& objects, const Matrix<4>& observer_M) {
