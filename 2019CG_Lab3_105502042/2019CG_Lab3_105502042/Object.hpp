@@ -17,7 +17,7 @@ public:
   [[nodiscard]] auto get_name() const { return file_name; }
 
   // turn faces into polygons
-  [[nodiscard]] auto get_polygons() const -> Polygons<4>;
+  [[nodiscard]] auto to_polygons() const -> Polygons<4>;
 
 private:
   friend auto operator<<(std::ostream& out, const Object& obj) -> std::ostream&;
@@ -64,7 +64,7 @@ inline auto Object::set_face(std::stringstream& ss, std::ifstream& asc_file) {
   }
 }
 
-inline auto Object::get_polygons() const -> Polygons<4> {
+inline auto Object::to_polygons() const -> Polygons<4> {
   Polygons<4> polygons{f_count};
   auto it = polygons.begin();
   for (const auto& face : faces) {

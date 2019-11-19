@@ -35,7 +35,7 @@ auto displayFunc() {
       process_observer(ss, vp, observer_M);
       break;
     case "display"_hash:
-      process_display(ss, vp, objects, observer_M * TM); // nobackfaces not done
+      process_display(ss, vp, objects, observer_M); // nobackfaces not done
       break;
     case "nobackfaces"_hash:
       nobackfaces = true;

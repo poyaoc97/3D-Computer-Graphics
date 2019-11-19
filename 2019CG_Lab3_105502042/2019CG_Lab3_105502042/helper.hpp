@@ -96,17 +96,18 @@ inline auto process_observer(std::stringstream& ss, const Viewport& vp, Matrix<4
   mirror[0][0] = -1;
 
   // construct PM, projection matrix
+  auto theta = Hav * piDiv180;
   Matrix<4> PM{identity_matrix};
   PM[1][1] = (vp.vxr - vp.vxl) / (vp.vyt - vp.vyb);
-  PM[2][2] = Yon / (Yon - Hither) * std::tan(Hav * piDiv180);
-  PM[2][3] = Hither * Yon / (Hither - Yon) * std::tan(Hav * piDiv180);
-  PM[3][2] = std::tan(Hav * piDiv180);
+  PM[2][2] = Yon / (Yon - Hither) * std::tan(theta);
+  PM[2][3] = Hither * Yon / (Hither - Yon) * std::tan(theta);
+  PM[3][2] = std::tan(theta);
   PM[3][3] = 0;
 
   observer_M = PM * rotation_m<4>(-Tilt) * mirror * GRM * translation_m<4>(-Ex, -Ey, -Ez);
 }
 
-inline auto process_display(std::stringstream& ss, const Viewport& vp, std::vector<Object>& objects, const Matrix<4>& pmXemXtm) {
+inline auto process_display(std::stringstream& ss, const Viewport& vp, std::vector<Object>& objects, const Matrix<4>& pmXem) {
   clear_screen();
   auto [vxl, vxr, vyb, vyt] = vp.get_borders();
   draw_polygon(Vertices<2>{{{vxl, vyb}, {vxr, vyb}, {vxr, vyt}, {vxl, vyt}}});
@@ -116,7 +117,7 @@ inline auto process_display(std::stringstream& ss, const Viewport& vp, std::vect
                       translation_m<4>(1.0, 1.0)};
 
   for (auto& obj : objects) {
-    auto a = transformed_ps(pmXemXtm, obj.get_polygons());
+    auto a = transformed_ps(pmXem, obj.to_polygons());
     std::transform(a.begin(), a.end(), a.begin(), [](auto a) {   //
       std::transform(a.begin(), a.end(), a.begin(), [](auto a) { //
         if (a[3])
