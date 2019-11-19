@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <execution>
 #include <fstream>
 #include <iostream>
@@ -17,6 +18,8 @@ using Vertices = std::vector<Vector<N>>;
 template<std::size_t N>
 using Polygons = std::vector<Vertices<N>>;
 
+constexpr double pi{3.141'592'653'589'793'238'46};
+constexpr double piDiv180{pi / 180};
 constexpr Matrix<4> identity_matrix{{{1, 0, 0, 0},
                                      {0, 1, 0, 0},
                                      {0, 0, 1, 0},
@@ -166,8 +169,7 @@ template<std::size_t N>
 // return a rotation matrix
 template<std::size_t N>
 [[nodiscard]] inline auto rotation_m(double degree, [[maybe_unused]] const char axis = 'z') -> Matrix<N> {
-  constexpr double pi{3.141'592'653'589'793'238'46};
-  degree *= pi / 180;
+  degree *= piDiv180;
   const double c{std::cos(degree)};
   const double s{std::sin(degree)};
   if constexpr (N == 3)
@@ -231,4 +233,19 @@ template<std::size_t N>
                    ret.begin(),
                    [&](auto& vs) { return transformed_vs(t, vs); });
   return ret;
+}
+
+inline auto cross(const Vector<4>& a, const Vector<4>& b) -> Vector<4> {
+  return {{a[1] * b[2] - b[1] * a[2],
+           a[2] * b[0] - b[2] * a[0],
+           a[0] * b[1] - b[0] * a[1],
+           0}};
+}
+
+template<size_t N>
+auto normalize(const Vector<N>& a) -> Vector<N> {
+  double norm = std::sqrt(a * a);
+  Vector<N> b;
+  std::transform(a.begin(), a.end(), b.begin(), [](auto a) { return a / norm; });
+  return b;
 }

@@ -37,7 +37,7 @@ inline auto process_translate(std::stringstream& ss, Matrix<4>& t) {
 struct Viewport {
   double vxl, vxr, vyb, vyt;
 
-  [[nodiscard]] auto get_borders() -> std::tuple<double, double, double, double> {
+  [[nodiscard]] auto get_borders() const -> std::tuple<double, double, double, double> {
     auto bx = [](auto v) { return (1 + v) * win_x / 2; };
     auto by = [](auto v) { return (1 + v) * win_y / 2; };
     return {bx(vxl), bx(vxr), by(vyb), by(vyt)};
@@ -77,12 +77,32 @@ inline auto process_object(std::stringstream& ss, std::vector<Object>& objects, 
   objects.push_back(asc_obj);
 }
 
-inline auto process_observer(std::stringstream& ss, Viewport& vp, const Matrix<4>& observer_M) {
+inline auto process_observer(std::stringstream& ss, const Viewport& vp, const Matrix<4>& observer_M) {
   double Ex, Ey, Ez, COIx, COIy, COIz, Tilt, Hither, Yon, Hav;
   ss >> Ex >> Ey >> Ez >> COIx >> COIy >> COIz >> Tilt >> Hither >> Yon >> Hav;
+  const Vector<4> top_vector{0, 1, 0, 0};
+  Vector<4> vz{{COIx - Ex, COIy - Ey, COIz - Ez}};
+  Vector<4> v1{cross(top_vector, v3)};
+  Matrix<4> GRM{{normalize(v1),
+                 normalize(cross(vz, v1)),
+                 normalize(vz),
+                 {0, 0, 0, 1}}};
+
+  // construct mirror
+  Matrix<4> mirror{identity_matrix};
+  mirror[0][0] = 0;
+
+  // construct PM, projection matrix
+  Matrix<4> PM{identity_matrix};
+  PM[1][1] = (vp.vxr - vp.vxl) / (vp.vyt - vp.vyb);
+  PM[2][2] = Yon / (Yon - Hither) * std::tan(Hav * piDiv180);
+  PM[2][3] = Hither * Yon / (Hither - Yon) * std::tan(Hav * piDiv180);
+  PM[3][2] = std::tan(Hav * piDiv180);
+
+  observer_M = PM * rotation_m(-Tilt) * mirror * GRM * translation_m(-Ex, -Ey, -Ez);
 }
 
-inline auto process_display(std::stringstream& ss, Viewport& vp, std::vector<Object>& objects, const Matrix<4>& observer_M) {
+inline auto process_display(std::stringstream& ss, const Viewport& vp, std::vector<Object>& objects, const Matrix<4>& trans) {
   clear_screen();
   auto [vxl, vxr, vyb, vyt] = vp.get_borders();
   draw_polygon(Vertices<2>{{{vxl, vyb}, {vxr, vyb}, {vxr, vyt}, {vxl, vyt}}});
@@ -90,7 +110,7 @@ inline auto process_display(std::stringstream& ss, Viewport& vp, std::vector<Obj
   Matrix<4> to_screen{translation_m<4>(vxl, vyb) *
                       scaling_m<4>((vxr - vxl) / 2, (vyt - vyb) / 2) *
                       translation_m<4>(1, 1) *
-                      observer_M};
+                      trans};
 
   for (auto& obj : objects)
     draw_polygons(transformed_ps(to_screen, clipped_polygons(obj.get_polygons())));
