@@ -58,8 +58,10 @@ inline auto process_object(std::stringstream& ss, std::vector<Object>& objects, 
   }
 
   std::ifstream asc_file{asc_path};
-  if (!asc_file)
-    asc_file.open("../Debug/" + asc_path);
+  if (!asc_file) {
+    asc_path = "../Debug/" + asc_path;
+    asc_file.open(asc_path);
+  }
 
   // read it
   std::string line;
@@ -77,12 +79,13 @@ inline auto process_object(std::stringstream& ss, std::vector<Object>& objects, 
   objects.push_back(asc_obj);
 }
 
-inline auto process_observer(std::stringstream& ss, const Viewport& vp, const Matrix<4>& observer_M) {
+inline auto process_observer(std::stringstream& ss, const Viewport& vp, Matrix<4>& observer_M) {
+  observer_M = identity_matrix;
   double Ex, Ey, Ez, COIx, COIy, COIz, Tilt, Hither, Yon, Hav;
   ss >> Ex >> Ey >> Ez >> COIx >> COIy >> COIz >> Tilt >> Hither >> Yon >> Hav;
   const Vector<4> top_vector{0, 1, 0, 0};
   Vector<4> vz{{COIx - Ex, COIy - Ey, COIz - Ez}};
-  Vector<4> v1{cross(top_vector, v3)};
+  Vector<4> v1{cross(top_vector, vz)};
   Matrix<4> GRM{{normalize(v1),
                  normalize(cross(vz, v1)),
                  normalize(vz),
@@ -90,7 +93,7 @@ inline auto process_observer(std::stringstream& ss, const Viewport& vp, const Ma
 
   // construct mirror
   Matrix<4> mirror{identity_matrix};
-  mirror[0][0] = 0;
+  mirror[0][0] = -1;
 
   // construct PM, projection matrix
   Matrix<4> PM{identity_matrix};
@@ -98,22 +101,33 @@ inline auto process_observer(std::stringstream& ss, const Viewport& vp, const Ma
   PM[2][2] = Yon / (Yon - Hither) * std::tan(Hav * piDiv180);
   PM[2][3] = Hither * Yon / (Hither - Yon) * std::tan(Hav * piDiv180);
   PM[3][2] = std::tan(Hav * piDiv180);
+  PM[3][3] = 0;
 
-  observer_M = PM * rotation_m(-Tilt) * mirror * GRM * translation_m(-Ex, -Ey, -Ez);
+  observer_M = PM * rotation_m<4>(-Tilt) * mirror * GRM * translation_m<4>(-Ex, -Ey, -Ez);
 }
 
-inline auto process_display(std::stringstream& ss, const Viewport& vp, std::vector<Object>& objects, const Matrix<4>& trans) {
+inline auto process_display(std::stringstream& ss, const Viewport& vp, std::vector<Object>& objects, const Matrix<4>& pmXemXtm) {
   clear_screen();
   auto [vxl, vxr, vyb, vyt] = vp.get_borders();
   draw_polygon(Vertices<2>{{{vxl, vyb}, {vxr, vyb}, {vxr, vyt}, {vxl, vyt}}});
 
   Matrix<4> to_screen{translation_m<4>(vxl, vyb) *
-                      scaling_m<4>((vxr - vxl) / 2, (vyt - vyb) / 2) *
-                      translation_m<4>(1, 1) *
-                      trans};
+                      scaling_m<4>((vxr - vxl) / 2.0, (vyt - vyb) / 2.0) *
+                      translation_m<4>(1.0, 1.0)};
 
-  for (auto& obj : objects)
-    draw_polygons(transformed_ps(to_screen, clipped_polygons(obj.get_polygons())));
+  for (auto& obj : objects) {
+    auto a = transformed_ps(pmXemXtm, obj.get_polygons());
+    std::transform(a.begin(), a.end(), a.begin(), [](auto a) {   //
+      std::transform(a.begin(), a.end(), a.begin(), [](auto a) { //
+        if (a[3])
+          return Vector<4>{{a[0] / a[3], a[1] / a[3], a[2] / a[3], 1.0}};
+        else
+          return a;
+      });
+      return a;
+    }); // perspective divide
+    draw_polygons(transformed_ps(to_screen, clipped_polygons(a)));
+  }
 
   glFlush();
   system("pause");

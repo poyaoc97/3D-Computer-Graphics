@@ -246,6 +246,6 @@ template<size_t N>
 auto normalize(const Vector<N>& a) -> Vector<N> {
   double norm = std::sqrt(a * a);
   Vector<N> b;
-  std::transform(a.begin(), a.end(), b.begin(), [](auto a) { return a / norm; });
+  std::transform(a.begin(), a.end(), b.begin(), [=](auto a) { return a / norm; });
   return b;
 }

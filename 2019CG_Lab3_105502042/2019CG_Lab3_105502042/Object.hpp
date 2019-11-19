@@ -20,7 +20,7 @@ public:
   [[nodiscard]] auto get_polygons() const -> Polygons<4>;
 
 private:
-  friend auto operator<<(std::ostream& out, const Object& obj) const -> std::ostream&;
+  friend auto operator<<(std::ostream& out, const Object& obj) -> std::ostream&;
   [[nodiscard]] auto get_v(int i) const { return vs[i - 1]; }
 };
 
@@ -64,7 +64,7 @@ inline auto Object::set_face(std::stringstream& ss, std::ifstream& asc_file) {
   }
 }
 
-inline auto Object::get_polygons() -> Polygons<4> {
+inline auto Object::get_polygons() const -> Polygons<4> {
   Polygons<4> polygons{f_count};
   auto it = polygons.begin();
   for (const auto& face : faces) {
