@@ -1,11 +1,12 @@
 #include "helper.hpp"
+
 std::ifstream in_file;
 
 auto displayFunc() {
   std::stringstream ss;
   Matrix<4> TM{identity_matrix};
-  Matrix<4> observer_M{identity_matrix};
   Viewport vp;
+  Observer ob_ov;
   std::vector<Object> objects;
 
   for (std::string line, str; std::getline(in_file, line);) {
@@ -17,25 +18,31 @@ auto displayFunc() {
     ss >> str;
     switch (operator""_hash(str.c_str(), str.size())) {
     case "scale"_hash:
-      process_scale(ss, TM);
+      TM = process_scale(ss) * TM;
+      //std::cout << "scale\n"
+      //         << TM;
       break;
     case "rotate"_hash:
-      process_rotate(ss, TM);
+      TM = process_rotate(ss) * TM;
+      //std::cout << "rotate\n"
+      //         << TM;
       break;
     case "translate"_hash:
-      process_translate(ss, TM);
+      TM = process_translate(ss) * TM;
+      //std::cout << "translate\n"
+      //         << TM;
       break;
     case "viewport"_hash:
-      process_viewport(ss, vp);
+      vp = process_viewport(ss);
       break;
     case "object"_hash:
-      process_object(ss, objects, TM);
+      objects.push_back(process_object(ss, TM));
       break;
     case "observer"_hash:
-      process_observer(ss, vp, observer_M);
+      ob_ov = process_observer(ss);
       break;
     case "display"_hash:
-      process_display(ss, vp, objects, observer_M); // nobackfaces not done
+      process_display(ss, vp, objects, ob_ov.get_pmXem(vp)); // nobackfaces not done
       break;
     case "nobackfaces"_hash:
       nobackfaces = true;

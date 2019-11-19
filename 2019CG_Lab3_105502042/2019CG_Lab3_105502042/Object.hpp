@@ -1,5 +1,7 @@
 #pragma once
 #include "MatrixKit.hpp"
+#include <fstream>
+#include <sstream>
 
 using Face = std::vector<int>;
 
@@ -12,8 +14,10 @@ class Object {
 
 public:
   Object(std::string_view s, size_t v, size_t f) : file_name{s}, v_count{v}, f_count{f}, vs{v}, faces{f} {}
+
   auto set_vertex(std::stringstream& ss, std::ifstream& asc_file, const Matrix<4>& TM);
   auto set_face(std::stringstream& ss, std::ifstream& asc_file);
+
   [[nodiscard]] auto get_name() const { return file_name; }
 
   // turn faces into polygons
@@ -21,7 +25,7 @@ public:
 
 private:
   friend auto operator<<(std::ostream& out, const Object& obj) -> std::ostream&;
-  [[nodiscard]] auto get_v(int i) const { return vs[i - 1]; }
+  [[nodiscard]] auto get_v(const int i) const { return vs[i - 1]; }
 };
 
 inline auto Object::set_vertex(std::stringstream& ss, std::ifstream& asc_file, const Matrix<4>& TM) {
@@ -69,7 +73,7 @@ inline auto Object::to_polygons() const -> Polygons<4> {
   auto it = polygons.begin();
   for (const auto& face : faces) {
     for (const auto& i : face)
-      (*it).push_back(get_v(i));
+      (*it).emplace_back(get_v(i));
     ++it;
   }
   return polygons;

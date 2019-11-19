@@ -32,6 +32,12 @@
     <ClInclude Include="Object.hpp">
       <Filter>標頭檔</Filter>
     </ClInclude>
+    <ClInclude Include="Observer.hpp">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="Viewport.hpp">
+      <Filter>資源檔</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

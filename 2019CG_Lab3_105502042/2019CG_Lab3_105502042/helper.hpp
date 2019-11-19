@@ -1,7 +1,10 @@
 #pragma once
 #include "DrawKit.hpp"
 #include "Object.hpp"
-#include <tuple>
+#include "Observer.hpp"
+#include "Viewport.hpp"
+#include <fstream>
+#include <sstream>
 
 int win_x, win_y;
 bool nobackfaces{false};
@@ -11,51 +14,40 @@ bool nobackfaces{false};
   return *s ^ count;
 }
 
-inline auto process_scale(std::stringstream& ss, Matrix<4>& t) {
+inline auto process_scale(std::stringstream& ss) {
   double x, y, z;
   ss >> x >> y >> z;
-  t = scaling_m<4>(x, y, z) * t;
+  return scaling_m<4>(x, y, z);
 }
 
-inline auto process_rotate(std::stringstream& ss, Matrix<4>& t) {
+inline auto process_rotate(std::stringstream& ss) {
   double x, y, z;
   ss >> x >> y >> z;
   if (x)
-    t = rotation_m<4>(x, 'x') * t;
+    return rotation_m<4>(x, 'x');
   else if (y)
-    t = rotation_m<4>(y, 'y') * t;
+    return rotation_m<4>(y, 'y');
   else
-    t = rotation_m<4>(z) * t;
+    return rotation_m<4>(z);
 }
 
-inline auto process_translate(std::stringstream& ss, Matrix<4>& t) {
+inline auto process_translate(std::stringstream& ss) {
   double x, y, z;
   ss >> x >> y >> z;
-  t = translation_m<4>(x, y, z) * t;
+  return translation_m<4>(x, y, z);
 }
 
-struct Viewport {
+inline auto process_viewport(std::stringstream& ss) {
   double vxl, vxr, vyb, vyt;
-
-  [[nodiscard]] auto get_borders() const -> std::tuple<double, double, double, double> {
-    auto bx = [](auto v) { return (1 + v) * win_x / 2; };
-    auto by = [](auto v) { return (1 + v) * win_y / 2; };
-    return {bx(vxl), bx(vxr), by(vyb), by(vyt)};
-  }
-};
-
-inline auto process_viewport(std::stringstream& ss, Viewport& vp) {
-  ss >> vp.vxl >> vp.vxr >> vp.vyb >> vp.vyt;
+  ss >> vxl >> vxr >> vyb >> vyt;
+  //std::cout << Vector<4>{vxl, vxr, vyb, vyt};
+  return Viewport{(vxr - vxl) / (vyt - vyb), vxl, vxr, vyb, vyt, win_x, win_y};
 }
 
-inline auto process_object(std::stringstream& ss, std::vector<Object>& objects, const Matrix<4>& TM) {
+inline auto process_object(std::stringstream& ss, const Matrix<4>& TM) {
   // open asc file
   std::string asc_path;
   ss >> asc_path;
-  if (objects.size() && objects.back().get_name() == asc_path) {
-    objects.push_back(objects.back());
-    return;
-  }
 
   std::ifstream asc_file{asc_path};
   if (!asc_file) {
@@ -66,6 +58,8 @@ inline auto process_object(std::stringstream& ss, std::vector<Object>& objects, 
   // read it
   std::string line;
   std::getline(asc_file, line);
+  if (line == "")
+    std::getline(asc_file, line);
   std::stringstream asc_ss;
   asc_ss << line;
 
@@ -76,60 +70,44 @@ inline auto process_object(std::stringstream& ss, std::vector<Object>& objects, 
   asc_obj.set_vertex(asc_ss, asc_file, TM);
   asc_obj.set_face(asc_ss, asc_file);
 
-  objects.push_back(asc_obj);
+  return asc_obj;
 }
 
-inline auto process_observer(std::stringstream& ss, const Viewport& vp, Matrix<4>& observer_M) {
-  observer_M = identity_matrix;
+inline auto process_observer(std::stringstream& ss) {
   double Ex, Ey, Ez, COIx, COIy, COIz, Tilt, Hither, Yon, Hav;
   ss >> Ex >> Ey >> Ez >> COIx >> COIy >> COIz >> Tilt >> Hither >> Yon >> Hav;
-  const Vector<4> top_vector{0, 1, 0, 0};
-  Vector<4> vz{{COIx - Ex, COIy - Ey, COIz - Ez}};
-  Vector<4> v1{cross(top_vector, vz)};
-  Matrix<4> GRM{{normalize(v1),
-                 normalize(cross(vz, v1)),
-                 normalize(vz),
-                 {0, 0, 0, 1}}};
-
-  // construct mirror
-  Matrix<4> mirror{identity_matrix};
-  mirror[0][0] = -1;
-
-  // construct PM, projection matrix
-  auto theta = Hav * piDiv180;
-  Matrix<4> PM{identity_matrix};
-  PM[1][1] = (vp.vxr - vp.vxl) / (vp.vyt - vp.vyb);
-  PM[2][2] = Yon / (Yon - Hither) * std::tan(theta);
-  PM[2][3] = Hither * Yon / (Hither - Yon) * std::tan(theta);
-  PM[3][2] = std::tan(theta);
-  PM[3][3] = 0;
-
-  observer_M = PM * rotation_m<4>(-Tilt) * mirror * GRM * translation_m<4>(-Ex, -Ey, -Ez);
+  return Observer{Ex, Ey, Ez, COIx, COIy, COIz, Tilt, Hither, Yon, Hav};
 }
 
 inline auto process_display(std::stringstream& ss, const Viewport& vp, std::vector<Object>& objects, const Matrix<4>& pmXem) {
-  clear_screen();
-  auto [vxl, vxr, vyb, vyt] = vp.get_borders();
-  draw_polygon(Vertices<2>{{{vxl, vyb}, {vxr, vyb}, {vxr, vyt}, {vxl, vyt}}});
+  const auto [vxl, vxr, vyb, vyt] = vp.get_borders();
 
-  Matrix<4> to_screen{translation_m<4>(vxl, vyb) *
-                      scaling_m<4>((vxr - vxl) / 2.0, (vyt - vyb) / 2.0) *
-                      translation_m<4>(1.0, 1.0)};
+  const Matrix<4> to_screen{translation_m<4>(vxl, vyb) *
+                            scaling_m<4>((vxr - vxl) / 2.0, (vyt - vyb) / 2.0) *
+                            translation_m<4>(1.0, 1.0)};
 
-  for (auto& obj : objects) {
+  std::vector<Polygons<4>> x{objects.size()};
+  auto t0 = high_resolution_clock::now();
+  std::transform(std::execution::par_unseq, objects.begin(), objects.end(), x.begin(), [&](const auto& obj) {
     auto a = transformed_ps(pmXem, obj.to_polygons());
-    std::transform(a.begin(), a.end(), a.begin(), [](auto a) {   //
-      std::transform(a.begin(), a.end(), a.begin(), [](auto a) { //
-        if (a[3])
-          return Vector<4>{{a[0] / a[3], a[1] / a[3], a[2] / a[3], 1.0}};
-        else
-          return a;
+
+    // perspective divide
+    std::transform(std::execution::par_unseq, a.begin(), a.end(), a.begin(), [](auto& a) {
+      std::transform(a.begin(), a.end(), a.begin(), [](auto& a) {
+        return (a[3] != 1) ? (Vector<4>{{a[0] / a[3], a[1] / a[3], a[2] / a[3], 1.0}}) : (a);
       });
       return a;
-    }); // perspective divide
-    draw_polygons(transformed_ps(to_screen, clipped_polygons(a)));
-  }
+    });
 
-  glFlush();
+    return (transformed_ps(to_screen, clipped_polygons(a)));
+  });
+  auto t1 = high_resolution_clock::now();
+  std::cout << "the whole pipeline (excluding drawing) takes: " << duration_cast<milliseconds>(t1 - t0).count() << "ms\n";
+
+  clear_screen_without_flush();
+  draw_polygon(Vertices<2>{{{vxl, vyb}, {vxr, vyb}, {vxr, vyt}, {vxl, vyt}}});
+  for (const auto& a : x)
+    draw_polygons(a);
+
   system("pause");
 }
