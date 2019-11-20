@@ -7,14 +7,17 @@
 
 using namespace std::chrono;
 
-template<size_t N>
-using Matrix = std::array<std::array<double, N>, N>;
+template<size_t N, typename T = double>
+using Matrix = std::array<std::array<T, N>, N>;
+
 template<size_t N, typename T = double>
 using Vector = std::array<T, N>;
+
 template<size_t N>
-using Vertices = std::vector<Vector<N>>;
+using Polygon_u = std::vector<Vector<N>>;
+
 template<size_t N>
-using Polygons = std::vector<Vertices<N>>;
+using Polygons = std::vector<Polygon_u<N>>;
 
 constexpr double pi{3.141'592'653'589'793'238'46};
 constexpr double piDiv180{pi / 180};
@@ -32,8 +35,8 @@ constexpr auto swap(T& a, T& b) {
 }
 
 // transpose a matrix
-template<typename T, size_t N>
-constexpr auto transpose(const std::array<std::array<T, N>, N>& a) {
+template<size_t N, typename T = double>
+constexpr auto transpose(const Matrix<N, T>& a) {
   auto m = a;
   for (size_t i = 0; i < N; ++i)
     for (size_t j = 0; j < i; ++j)
@@ -42,14 +45,14 @@ constexpr auto transpose(const std::array<std::array<T, N>, N>& a) {
 }
 
 // standard inner product
-template<typename T, size_t N>
-constexpr auto operator*(const std::array<T, N>& lhs, const std::array<T, N>& rhs) {
+template<size_t N, typename T = double>
+constexpr auto operator*(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
   return std::inner_product(lhs.begin(), lhs.end(), rhs.begin(), 0.0);
 }
 
 // matrix multiplication
-template<typename T, size_t N>
-constexpr auto operator*(const std::array<std::array<T, N>, N>& lhs, const std::array<std::array<T, N>, N>& rhs) {
+template<size_t N, typename T = double>
+constexpr auto operator*(const Matrix<N, T>& lhs, const Matrix<N, T>& rhs) {
   std::array<std::array<T, N>, N> product{};
   auto rhst{transpose(rhs)};
   for (size_t i = 0; i < N; ++i)
@@ -59,8 +62,8 @@ constexpr auto operator*(const std::array<std::array<T, N>, N>& lhs, const std::
 }
 
 // matrix X vector ⟼ vector
-template<typename T, size_t N>
-constexpr auto operator*(const std::array<std::array<T, N>, N>& lhs, const std::array<T, N>& rhs) {
+template<size_t N, typename T = double>
+constexpr auto operator*(const Matrix<N, T>& lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
   std::transform(lhs.begin(),
                  lhs.end(),
@@ -70,8 +73,8 @@ constexpr auto operator*(const std::array<std::array<T, N>, N>& lhs, const std::
 }
 
 // scalar X vector ⟼ vector
-template<typename Scalar, typename T, size_t N>
-constexpr auto operator*(const Scalar lhs, const std::array<T, N>& rhs) {
+template<typename Scalar, size_t N, typename T = double>
+constexpr auto operator*(const Scalar lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
   std::transform(rhs.begin(),
                  rhs.end(),
@@ -81,16 +84,16 @@ constexpr auto operator*(const Scalar lhs, const std::array<T, N>& rhs) {
 }
 
 // print a vector, has a trailing newline
-template<typename T, size_t N>
-constexpr auto operator<<(std::ostream& out, const std::array<T, N>& v) -> std::ostream& {
+template<size_t N, typename T = double>
+constexpr auto operator<<(std::ostream& out, const Vector<N, T>& v) -> std::ostream& {
   for (const auto& a : v)
     out << "[ " << a << " ]" << '\n';
   return out;
 }
 
 // print a matrix, has a trailing newline
-template<typename T, size_t N>
-constexpr auto operator<<(std::ostream& out, const std::array<std::array<T, N>, N>& m) -> std::ostream& {
+template<size_t N, typename T = double>
+constexpr auto operator<<(std::ostream& out, const Matrix<N, T>& m) -> std::ostream& {
   for (const auto& row : m) {
     out << "[ ";
     for (const auto& scalar : row)
@@ -102,15 +105,15 @@ constexpr auto operator<<(std::ostream& out, const std::array<std::array<T, N>, 
 
 // print all vertices of a polygon
 template<size_t N>
-inline auto operator<<(std::ostream& out, const Vertices<N>& vs) -> std::ostream& {
+inline auto operator<<(std::ostream& out, const Polygon_u<N>& vs) -> std::ostream& {
   for (const auto& v : vs)
     out << '(' << v[0] << ", " << v[1] << ", " << v[2] << ", " << v[3] << ")\n";
   return out;
 }
 
 // vector - vector ⟼ vector
-template<typename T, size_t N>
-constexpr auto operator-(const std::array<T, N>& lhs, const std::array<T, N>& rhs) {
+template<size_t N, typename T = double>
+constexpr auto operator-(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
   std::transform(lhs.begin(),
                  lhs.end(),
@@ -121,8 +124,8 @@ constexpr auto operator-(const std::array<T, N>& lhs, const std::array<T, N>& rh
 }
 
 // vector + vector ⟼ vector
-template<typename T, size_t N>
-constexpr auto operator+(const std::array<T, N>& lhs, const std::array<T, N>& rhs) {
+template<size_t N, typename T = double>
+constexpr auto operator+(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
   std::transform(lhs.begin(),
                  lhs.end(),
@@ -196,10 +199,10 @@ template<size_t N>
 
 // apply a transformation to all vertices of a polygon
 template<size_t N>
-[[nodiscard]] inline auto transformed_vs(const Matrix<N>& t, const Vertices<N>& vs) -> Vertices<N> {
+[[nodiscard]] inline auto transformed_vs(const Matrix<N>& t, const Polygon_u<N>& vs) -> Polygon_u<N> {
   auto size = vs.size();
   // std::cout << "Number of vertices: " << size << '\n';
-  Vertices<N> ret{size};
+  Polygon_u<N> ret{size};
   std::transform(vs.cbegin(),
                  vs.cend(),
                  ret.begin(),
@@ -220,6 +223,7 @@ template<size_t N>
   return ret;
 }
 
+// cross product, ignore the 4th component and set it to zero
 inline auto cross(const Vector<4>& a, const Vector<4>& b) -> Vector<4> {
   return {{a[1] * b[2] - b[1] * a[2],
            a[2] * b[0] - b[2] * a[0],

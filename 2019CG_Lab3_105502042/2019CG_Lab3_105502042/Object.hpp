@@ -9,7 +9,7 @@ class Object {
   std::string file_name;
   size_t v_count;
   size_t f_count;
-  Vertices<4> vs;
+  Polygon_u<4> vs;
   std::vector<Face> faces;
 
 public:

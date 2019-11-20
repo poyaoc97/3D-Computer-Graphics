@@ -19,18 +19,12 @@ auto displayFunc() {
     switch (operator""_hash(str.c_str(), str.size())) {
     case "scale"_hash:
       TM = process_scale(ss) * TM;
-      //std::cout << "scale\n"
-      //         << TM;
       break;
     case "rotate"_hash:
       TM = process_rotate(ss) * TM;
-      //std::cout << "rotate\n"
-      //         << TM;
       break;
     case "translate"_hash:
       TM = process_translate(ss) * TM;
-      //std::cout << "translate\n"
-      //         << TM;
       break;
     case "viewport"_hash:
       vp = process_viewport(ss);
@@ -55,8 +49,6 @@ auto displayFunc() {
     case ""_hash: // newlines fall into this case
     case "#"_hash:
       break;
-    default:
-      std::cerr << "default case is supposed to be unreachable!\n";
     } // catches all cases no default!
   }
 }
