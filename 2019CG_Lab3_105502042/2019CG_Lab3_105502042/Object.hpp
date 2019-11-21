@@ -18,14 +18,14 @@ public:
   auto set_vertex(std::stringstream& ss, std::ifstream& asc_file, const Matrix<4>& TM);
   auto set_face(std::stringstream& ss, std::ifstream& asc_file);
 
-  [[nodiscard]] auto get_name() const { return file_name; }
+  auto get_name() const { return file_name; }
 
   // turn faces into polygons
-  [[nodiscard]] auto to_polygons() const -> Polygons<4>;
+  auto to_polygons() const;
 
 private:
   friend auto operator<<(std::ostream& out, const Object& obj) -> std::ostream&;
-  [[nodiscard]] auto get_v(const int i) const { return vs[i - 1]; }
+  auto get_v(const int i) const { return vs[i - 1]; }
 };
 
 inline auto Object::set_vertex(std::stringstream& ss, std::ifstream& asc_file, const Matrix<4>& TM) {
@@ -68,7 +68,7 @@ inline auto Object::set_face(std::stringstream& ss, std::ifstream& asc_file) {
   }
 }
 
-inline auto Object::to_polygons() const -> Polygons<4> {
+inline auto Object::to_polygons() const {
   Polygons<4> polygons{f_count};
   auto it = polygons.begin();
   for (const auto& face : faces) {

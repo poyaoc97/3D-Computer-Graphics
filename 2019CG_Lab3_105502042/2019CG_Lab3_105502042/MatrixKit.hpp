@@ -65,8 +65,7 @@ constexpr auto operator*(const Matrix<N, T>& lhs, const Matrix<N, T>& rhs) {
 template<size_t N, typename T = double>
 constexpr auto operator*(const Matrix<N, T>& lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
-  std::transform(lhs.begin(),
-                 lhs.end(),
+  std::transform(lhs.begin(), lhs.end(),
                  ret.begin(),
                  [&](const auto& l) { return l * rhs; });
   return ret;
@@ -76,8 +75,7 @@ constexpr auto operator*(const Matrix<N, T>& lhs, const Vector<N, T>& rhs) {
 template<typename Scalar, size_t N, typename T = double>
 constexpr auto operator*(const Scalar lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
-  std::transform(rhs.begin(),
-                 rhs.end(),
+  std::transform(rhs.begin(), rhs.end(),
                  ret.begin(),
                  [&](const auto& r) { return lhs * r; });
   return ret;
@@ -115,8 +113,7 @@ inline auto operator<<(std::ostream& out, const Polygon_u<N>& vs) -> std::ostrea
 template<size_t N, typename T = double>
 constexpr auto operator-(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
-  std::transform(lhs.begin(),
-                 lhs.end(),
+  std::transform(lhs.begin(), lhs.end(),
                  rhs.begin(),
                  ret.begin(),
                  [](const auto l, const auto r) { return l - r; });
@@ -127,8 +124,7 @@ constexpr auto operator-(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
 template<size_t N, typename T = double>
 constexpr auto operator+(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
-  std::transform(lhs.begin(),
-                 lhs.end(),
+  std::transform(lhs.begin(), lhs.end(),
                  rhs.begin(),
                  ret.begin(),
                  [](const auto l, const auto r) { return l + r; });
@@ -137,59 +133,59 @@ constexpr auto operator+(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
 
 // return a scaling matrix
 template<size_t N>
-[[nodiscard]] constexpr auto scaling_m(const double sx, const double sy, [[maybe_unused]] const double sz = 0) -> Matrix<N> {
+[[nodiscard]] constexpr auto scaling_m(const double sx, const double sy, [[maybe_unused]] const double sz = 0) {
   if constexpr (N == 3)
-    return {{{sx, 0, 0},
-             {0, sy, 0},
-             {0, 0, 1}}};
+    return Matrix<N>{{{sx, 0, 0},
+                      {0, sy, 0},
+                      {0, 0, 1}}};
   else if constexpr (N == 4)
-    return {{{sx, 0, 0, 0},
-             {0, sy, 0, 0},
-             {0, 0, sz, 0},
-             {0, 0, 0, 1}}};
+    return Matrix<N>{{{sx, 0, 0, 0},
+                      {0, sy, 0, 0},
+                      {0, 0, sz, 0},
+                      {0, 0, 0, 1}}};
 }
 
 // return a translation matrix
 template<size_t N>
-[[nodiscard]] constexpr auto translation_m(const double dx, const double dy, [[maybe_unused]] const double dz = 0) -> Matrix<N> {
+[[nodiscard]] constexpr auto translation_m(const double dx, const double dy, [[maybe_unused]] const double dz = 0) {
   if constexpr (N == 3)
-    return {{{1, 0, dx},
-             {0, 1, dy},
-             {0, 0, 1}}};
+    return Matrix<N>{{{1, 0, dx},
+                      {0, 1, dy},
+                      {0, 0, 1}}};
   else if constexpr (N == 4)
-    return {{{1, 0, 0, dx},
-             {0, 1, 0, dy},
-             {0, 0, 1, dz},
-             {0, 0, 0, 1}}};
+    return Matrix<N>{{{1, 0, 0, dx},
+                      {0, 1, 0, dy},
+                      {0, 0, 1, dz},
+                      {0, 0, 0, 1}}};
 }
 
 // return a rotation matrix
 template<size_t N>
-[[nodiscard]] inline auto rotation_m(double degree, [[maybe_unused]] const char axis = 'z') -> Matrix<N> {
+[[nodiscard]] inline auto rotation_m(double degree, [[maybe_unused]] const char axis = 'z') {
   degree *= piDiv180;
   const double c{std::cos(degree)};
   const double s{std::sin(degree)};
   if constexpr (N == 3)
-    return {{{c, -s, 0},
-             {s, c, 0},
-             {0, 0, 1}}};
+    return Matrix<N>{{{c, -s, 0},
+                      {s, c, 0},
+                      {0, 0, 1}}};
   else if constexpr (N == 4) {
     switch (axis) {
     case 'z':
-      return {{{c, -s, 0, 0},
-               {s, c, 0, 0},
-               {0, 0, 1, 0},
-               {0, 0, 0, 1}}};
+      return Matrix<N>{{{c, -s, 0, 0},
+                        {s, c, 0, 0},
+                        {0, 0, 1, 0},
+                        {0, 0, 0, 1}}};
     case 'x':
-      return {{{1, 0, 0, 0},
-               {0, c, -s, 0},
-               {0, s, c, 0},
-               {0, 0, 0, 1}}};
+      return Matrix<N>{{{1, 0, 0, 0},
+                        {0, c, -s, 0},
+                        {0, s, c, 0},
+                        {0, 0, 0, 1}}};
     case 'y':
-      return {{{c, 0, s, 0},
-               {0, 1, 0, 0},
-               {-s, 0, c, 0},
-               {0, 0, 0, 1}}};
+      return Matrix<N>{{{c, 0, s, 0},
+                        {0, 1, 0, 0},
+                        {-s, 0, c, 0},
+                        {0, 0, 0, 1}}};
     default:
       std::cerr << "rotation return identity!\n";
       return identity_matrix;
@@ -199,12 +195,11 @@ template<size_t N>
 
 // apply a transformation to all vertices of a polygon
 template<size_t N>
-[[nodiscard]] inline auto transformed_vs(const Matrix<N>& t, const Polygon_u<N>& vs) -> Polygon_u<N> {
+[[nodiscard]] inline auto transformed_vs(const Matrix<N>& t, const Polygon_u<N>& vs) {
   auto size = vs.size();
   // std::cout << "Number of vertices: " << size << '\n';
   Polygon_u<N> ret{size};
-  std::transform(vs.cbegin(),
-                 vs.cend(),
+  std::transform(vs.begin(), vs.end(),
                  ret.begin(),
                  [&](const auto& v) { return t * v; });
   return ret;
@@ -212,27 +207,26 @@ template<size_t N>
 
 // apply a transformation to a vector of vertices
 template<size_t N>
-[[nodiscard]] inline auto transformed_ps(const Matrix<N>& t, const Polygons<N>& ps) -> Polygons<N> {
+[[nodiscard]] inline auto transformed_ps(const Matrix<N>& t, const Polygons<N>& ps) {
   auto size = ps.size();
   Polygons<N> ret{size};
   std::transform(std::execution::par_unseq,
-                 ps.begin(),
-                 ps.end(),
+                 ps.begin(), ps.end(),
                  ret.begin(),
                  [&](const auto& vs) { return transformed_vs(t, vs); });
   return ret;
 }
 
 // cross product, ignore the 4th component and set it to zero
-inline auto cross(const Vector<4>& a, const Vector<4>& b) -> Vector<4> {
-  return {{a[1] * b[2] - b[1] * a[2],
-           a[2] * b[0] - b[2] * a[0],
-           a[0] * b[1] - b[0] * a[1],
-           0}};
+inline auto cross(const Vector<4>& a, const Vector<4>& b) {
+  return Vector<4>{{a[1] * b[2] - b[1] * a[2],
+                    a[2] * b[0] - b[2] * a[0],
+                    a[0] * b[1] - b[0] * a[1],
+                    0}};
 }
 
 template<size_t N>
-auto normalize(const Vector<N>& a) -> Vector<N> {
+auto normalize(const Vector<N>& a) {
   double norm = std::sqrt(a * a);
   Vector<N> b;
   std::transform(a.begin(), a.end(), b.begin(), [&](auto a) { return a / norm; });

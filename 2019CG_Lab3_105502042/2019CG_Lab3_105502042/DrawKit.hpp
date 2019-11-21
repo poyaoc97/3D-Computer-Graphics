@@ -97,40 +97,37 @@ auto clip_one_edge(const Polygons<4>& polygons, Polygons<4>& clipped_polys, cons
         clipped_vs.push_back(p);
       }
     }
-    std::lock_guard<std::mutex> l{lock};
+    std::lock_guard l{lock};
     clipped_polys.push_back(std::move(clipped_vs));
   });
 }
 
 inline auto clipped_polygons(const Polygons<4>& polygons) {
-  // auto t0 = high_resolution_clock::now();
   constexpr auto x = 0;
   constexpr auto y = 1;
 
-  auto Pred_t_1 = [](const auto s, const auto p) { return s <= 1 && p <= 1; };
-  auto Pred_t_2 = [](const auto s, const auto p) { return s <= 1 && p > 1; };
-  auto Pred_t_3 = [](const auto s, const auto p) { return s > 1 && p <= 1; };
+  auto in2in_u = [](auto sc, auto pc) { return sc <= 1 && pc <= 1; };
+  auto in2out_u = [](auto sc, auto pc) { return sc <= 1 && pc > 1; };
+  auto out2in_u = [](auto sc, auto pc) { return sc > 1 && pc <= 1; };
 
-  auto Pred_b_1 = [](const auto s, const auto p) { return s >= -1 && p >= -1; };
-  auto Pred_b_2 = [](const auto s, const auto p) { return s >= -1 && p < -1; };
-  auto Pred_b_3 = [](const auto s, const auto p) { return s < -1 && p >= -1; };
+  auto in2in_l = [](auto sc, auto pc) { return sc >= -1 && pc >= -1; };
+  auto in2out_l = [](auto sc, auto pc) { return sc >= -1 && pc < -1; };
+  auto out2in_l = [](auto sc, auto pc) { return sc < -1 && pc >= -1; };
 
   Polygons<4> a;
   Polygons<4> clipped_polys;
-  clip_one_edge(polygons, clipped_polys, 1, x, Pred_t_1, Pred_t_2, Pred_t_3);
+  clip_one_edge(polygons, clipped_polys, 1, x, in2in_u, in2out_u, out2in_u);
   a = std::move(clipped_polys);
   clipped_polys.clear();
 
-  clip_one_edge(a, clipped_polys, 1, y, Pred_t_1, Pred_t_2, Pred_t_3);
+  clip_one_edge(a, clipped_polys, 1, y, in2in_u, in2out_u, out2in_u);
   a = std::move(clipped_polys);
   clipped_polys.clear();
 
-  clip_one_edge(a, clipped_polys, -1, x, Pred_b_1, Pred_b_2, Pred_b_3);
+  clip_one_edge(a, clipped_polys, -1, x, in2in_l, in2out_l, out2in_l);
   a = std::move(clipped_polys);
   clipped_polys.clear();
 
-  clip_one_edge(a, clipped_polys, -1, y, Pred_b_1, Pred_b_2, Pred_b_3);
-  // auto t1 = high_resolution_clock::now();
-  // std::cout << "clipped_polygons() takes: " << duration_cast<milliseconds>(t1 - t0).count() << "ms\n";
+  clip_one_edge(a, clipped_polys, -1, y, in2in_l, in2out_l, out2in_l);
   return clipped_polys;
 }

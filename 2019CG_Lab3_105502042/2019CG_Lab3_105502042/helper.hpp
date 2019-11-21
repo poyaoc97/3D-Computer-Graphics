@@ -10,8 +10,8 @@ int win_x, win_y;
 bool nobackfaces{false};
 
 // simple hash function
-[[nodiscard]] constexpr auto operator""_hash(const char* s, const std::size_t count) -> std::size_t {
-  return *s ^ count;
+[[nodiscard]] constexpr auto operator""_hash(const char* s, const size_t count) {
+  return size_t{*s ^ count};
 }
 
 inline auto process_scale(std::stringstream& ss) {
@@ -40,7 +40,6 @@ inline auto process_translate(std::stringstream& ss) {
 inline auto process_viewport(std::stringstream& ss) {
   double vxl, vxr, vyb, vyt;
   ss >> vxl >> vxr >> vyb >> vyt;
-  //std::cout << Vector<4>{vxl, vxr, vyb, vyt};
   return Viewport{(vxr - vxl) / (vyt - vyb), vxl, vxr, vyb, vyt, win_x, win_y};
 }
 
@@ -78,24 +77,21 @@ inline auto process_observer(std::stringstream& ss) {
   return Observer{Ex, Ey, Ez, COIx, COIy, COIz, Tilt, Hither, Yon, Hav};
 }
 
-inline auto process_display(std::stringstream& ss, const Viewport& vp, std::vector<Object>& objects, const Matrix<4>& pmXem) {
+inline auto process_display(const Viewport& vp, const std::vector<Object>& objects, const Matrix<4>& pmXem) {
   auto t0 = high_resolution_clock::now();
   // dump all faces of all objects to Polygons<4>
   Polygons<4> ps;
   for (const auto& obj : objects) {
-    auto a = obj.to_polygons();
+    const auto&& a = obj.to_polygons();
     ps.insert(ps.end(), a.begin(), a.end());
   }
-
   // pmXem and perspective divide
-  std::transform(std::execution::par_unseq, ps.begin(), ps.end(), ps.begin(), [&](const auto& ps) {
-    auto ret{transformed_vs(pmXem, ps)};
+  std::transform(std::execution::par_unseq, ps.begin(), ps.end(), ps.begin(), [&](const auto& p) {
+    auto ret{transformed_vs(pmXem, p)};
     for (auto& a : ret)
       if (a[3] != 1)
         a = Vector<4>{{a[0] / a[3], a[1] / a[3], a[2] / a[3], 1.0}};
-    return ret;
-  });
-
+    return ret; });
   // nobackfaces
   if (nobackfaces)
     ps.erase(std::remove_if(std::execution::par_unseq, ps.begin(), ps.end(), [](const auto& a) {
@@ -106,13 +102,12 @@ inline auto process_display(std::stringstream& ss, const Viewport& vp, std::vect
   const auto [vxl, vxr, vyb, vyt] = vp.get_borders();
   clear_screen_without_flush();
   draw_polygon(Polygon_u<2>{{{vxl, vyb}, {vxr, vyb}, {vxr, vyt}, {vxl, vyt}}});
-  draw_polygons((transformed_ps(Matrix<4>{translation_m<4>(vxl, vyb) *
-                                          scaling_m<4>((vxr - vxl) / 2.0, (vyt - vyb) / 2.0) *
-                                          translation_m<4>(1.0, 1.0)},
-                                clipped_polygons(ps))));
+  draw_polygons(transformed_ps(Matrix<4>{translation_m<4>(vxl, vyb) *
+                                         scaling_m<4>((vxr - vxl) / 2.0, (vyt - vyb) / 2.0) *
+                                         translation_m<4>(1.0, 1.0)},
+                               clipped_polygons(ps)));
   glFlush();
   auto t1 = high_resolution_clock::now();
-  std::cout << "display() takes: " << duration_cast<milliseconds>(t1 - t0).count() << "ms\n";
-
+  std::cout << "process_display() takes: " << duration_cast<milliseconds>(t1 - t0).count() << "ms\n";
   system("pause");
 }
