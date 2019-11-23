@@ -22,9 +22,6 @@
     <ClInclude Include="DrawKit.hpp">
       <Filter>標頭檔</Filter>
     </ClInclude>
-    <ClInclude Include="helper.hpp">
-      <Filter>標頭檔</Filter>
-    </ClInclude>
     <ClInclude Include="Object.hpp">
       <Filter>標頭檔</Filter>
     </ClInclude>

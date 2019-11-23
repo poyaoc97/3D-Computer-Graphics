@@ -22,19 +22,19 @@ auto draw_line(const Vector<N>& endpoint1, const Vector<N>& endpoint2) {
   glVertex2i(x1, y1); // draw the first point no matter wut
 
   // preprocessing
-  bool neg_slope{y1 > y2};
+  const bool neg_slope{y1 > y2};
   if (neg_slope)         // see if the slope is negative
     y2 += 2 * (y1 - y2); // mirror the line with respect to y = y1 for now, and voila, a positive slope line!
                          // we draw this line as if the slope was positive in our head and draw it "upside down" on the screen in the while loop
-  bool slope_grt_one{(y2 - y1) > (x2 - x1)};
+  const bool slope_grt_one{(y2 - y1) > (x2 - x1)};
   if (slope_grt_one) { // slope greater than 1, swap x and y,  mirror the line with respect to y = x for now, mirror it again when drawing
     swap(x1, y1);
     swap(x2, y2);
   }
   int x{x1};
   int y{y1};
-  int a{y2 - y1};
-  int b{x1 - x2};
+  const int a{y2 - y1};
+  const int b{x1 - x2};
   int d{2 * a + b};
   while (x < x2) { // draw from left to right (recall that we make x2 be always on the right)
     if (d <= 0) {  // choose E
@@ -58,10 +58,13 @@ template<size_t N>
 inline auto draw_polygon(const Polygon_u<N>& vs) {
   if (!vs.size())
     return;
+
   draw_line(vs.front(), vs[1]);
   draw_line(vs.front(), vs.back());
   for (auto it = vs.cbegin() + 1; it != vs.cend(); ++it)
     draw_line(*(it - 1), *it);
+
+  glFlush();
 }
 
 template<size_t N>
@@ -70,64 +73,43 @@ inline auto draw_polygons(const Polygons<N>& ps) {
     draw_polygon(vs);
 }
 
-inline auto clear_screen_without_flush() {
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glClear(GL_COLOR_BUFFER_BIT);
-}
-
-template<typename Predicate1, typename Predicate2, typename Predicate3>
-auto clip_one_edge(const Polygons<4>& polygons, Polygons<4>& clipped_polys, const double boundary, const size_t comp,
-                   const Predicate1& in2in, const Predicate2& in2out, const Predicate3& out2in) {
-  std::mutex lock;
-
-  std::for_each(std::execution::par_unseq, polygons.begin(), polygons.end(), [&](const auto& vs) {
-    const auto sz = vs.size();
-    Polygon_u<4> clipped_vs;
-    for (size_t i = 0; i < sz; ++i) {
-      const auto& s = vs[i];
-      const auto& p = vs[(i + 1) % sz];
-      const auto sc = s[comp];
-      const auto pc = p[comp];
-      if (auto dir = p - s; in2in(sc, pc))
-        clipped_vs.push_back(p);
-      else if (in2out(sc, pc))
-        clipped_vs.push_back(s + std::abs((boundary - sc) / dir[comp]) * dir);
-      else if (out2in(sc, pc)) {
-        clipped_vs.push_back(s + std::abs((boundary - sc) / dir[comp]) * dir);
-        clipped_vs.push_back(p);
-      }
-    }
-    std::lock_guard l{lock};
-    clipped_polys.push_back(std::move(clipped_vs));
-  });
-}
-
-inline auto clipped_polygons(const Polygons<4>& polygons) {
-  constexpr auto x = 0;
-  constexpr auto y = 1;
-
-  auto in2in_u = [](auto sc, auto pc) { return sc <= 1 && pc <= 1; };
-  auto in2out_u = [](auto sc, auto pc) { return sc <= 1 && pc > 1; };
-  auto out2in_u = [](auto sc, auto pc) { return sc > 1 && pc <= 1; };
-
-  auto in2in_l = [](auto sc, auto pc) { return sc >= -1 && pc >= -1; };
-  auto in2out_l = [](auto sc, auto pc) { return sc >= -1 && pc < -1; };
-  auto out2in_l = [](auto sc, auto pc) { return sc < -1 && pc >= -1; };
-
-  Polygons<4> a;
+inline auto project_clip_pd(const Polygons<4>& polygons, const Matrix<4>& pmXem) {
+  using Codes = std::vector<std::function<double(Vector<4>)>>;
+  const Codes codes{{[](const Vector<4>& v) { return v[3] - v[0]; }, [](const Vector<4>& v) { return v[3] + v[0]; }, // w - x, w + x
+                     [](const Vector<4>& v) { return v[3] - v[1]; }, [](const Vector<4>& v) { return v[3] + v[1]; }, // w - y, w + y
+                     [](const Vector<4>& v) { return v[3] - v[2]; }, [](const Vector<4>& v) { return v[2]; }}};      // w - z, w
   Polygons<4> clipped_polys;
-  clip_one_edge(polygons, clipped_polys, 1, x, in2in_u, in2out_u, out2in_u);
-  a = std::move(clipped_polys);
-  clipped_polys.clear();
+  std::mutex lock_clipped_polys;
 
-  clip_one_edge(a, clipped_polys, 1, y, in2in_u, in2out_u, out2in_u);
-  a = std::move(clipped_polys);
-  clipped_polys.clear();
+  std::for_each(std::execution::par_unseq, polygons.begin(), polygons.end(), [&](Polygon_u<4> polygon) {
+    Polygon_u<4> relay;
+    polygon = transformed_vs(pmXem, polygon); // project a polygon to projection space
 
-  clip_one_edge(a, clipped_polys, -1, x, in2in_l, in2out_l, out2in_l);
-  a = std::move(clipped_polys);
-  clipped_polys.clear();
+    for (const auto& c : codes) { // clip against all six planes
+      const auto sz = polygon.size();
+      for (size_t i = 0; i < sz; ++i) {
+        const auto& s = polygon[i];
+        const auto& p = polygon[(i + 1) % sz];
+        if (const double c1{c(s)}, c2{c(p)}; c1 >= 0 && c2 >= 0) { // in2in
+          relay.push_back(p);
+        } else if (const auto new_s = s + c1 / (c1 - c2) * (p - s); c1 >= 0 && c2 < 0) { // in2out
+          relay.push_back(new_s);
+        } else if (c1 < 0 && c2 >= 0) { // out2in
+          relay.push_back(new_s);
+          relay.push_back(p);
+        }
+      }
+      polygon = relay;
+      relay.clear();
+    }
 
-  clip_one_edge(a, clipped_polys, -1, y, in2in_l, in2out_l, out2in_l);
+    if (polygon.size()) {
+      for (auto& a : polygon) // perspective division
+        if (a[3] != 1)
+          a = Vector<4>{{a[0] / a[3], a[1] / a[3], a[2] / a[3], 1.0}};
+      std::lock_guard l{lock_clipped_polys};
+      clipped_polys.push_back(std::move(polygon));
+    }
+  });
   return clipped_polys;
 }

@@ -124,7 +124,6 @@
   <ItemGroup>
     <ClInclude Include="MatrixKit.hpp" />
     <ClInclude Include="DrawKit.hpp" />
-    <ClInclude Include="helper.hpp" />
     <ClInclude Include="Object.hpp" />
     <ClInclude Include="Observer.hpp" />
     <ClInclude Include="Viewport.hpp" />

@@ -1,6 +1,5 @@
 #pragma once
 #include <array>
-#include <chrono>
 #include <cmath>
 #include <execution>
 #include <iostream>
@@ -65,9 +64,7 @@ constexpr auto operator*(const Matrix<N, T>& lhs, const Matrix<N, T>& rhs) {
 template<size_t N, typename T = double>
 constexpr auto operator*(const Matrix<N, T>& lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
-  std::transform(lhs.begin(), lhs.end(),
-                 ret.begin(),
-                 [&](const auto& l) { return l * rhs; });
+  std::transform(lhs.begin(), lhs.end(), ret.begin(), [&](const auto& l) { return l * rhs; });
   return ret;
 }
 
@@ -75,9 +72,7 @@ constexpr auto operator*(const Matrix<N, T>& lhs, const Vector<N, T>& rhs) {
 template<typename Scalar, size_t N, typename T = double>
 constexpr auto operator*(const Scalar lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
-  std::transform(rhs.begin(), rhs.end(),
-                 ret.begin(),
-                 [&](const auto& r) { return lhs * r; });
+  std::transform(rhs.begin(), rhs.end(), ret.begin(), [&](const auto& r) { return lhs * r; });
   return ret;
 }
 
@@ -113,10 +108,7 @@ inline auto operator<<(std::ostream& out, const Polygon_u<N>& vs) -> std::ostrea
 template<size_t N, typename T = double>
 constexpr auto operator-(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
-  std::transform(lhs.begin(), lhs.end(),
-                 rhs.begin(),
-                 ret.begin(),
-                 [](const auto l, const auto r) { return l - r; });
+  std::transform(lhs.begin(), lhs.end(), rhs.begin(), ret.begin(), [](const auto l, const auto r) { return l - r; });
   return ret;
 }
 
@@ -124,10 +116,7 @@ constexpr auto operator-(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
 template<size_t N, typename T = double>
 constexpr auto operator+(const Vector<N, T>& lhs, const Vector<N, T>& rhs) {
   std::array<T, N> ret{};
-  std::transform(lhs.begin(), lhs.end(),
-                 rhs.begin(),
-                 ret.begin(),
-                 [](const auto l, const auto r) { return l + r; });
+  std::transform(lhs.begin(), lhs.end(), rhs.begin(), ret.begin(), [](const auto l, const auto r) { return l + r; });
   return ret;
 }
 
@@ -196,38 +185,27 @@ template<size_t N>
 // apply a transformation to all vertices of a polygon
 template<size_t N>
 [[nodiscard]] inline auto transformed_vs(const Matrix<N>& t, const Polygon_u<N>& vs) {
-  auto size = vs.size();
-  // std::cout << "Number of vertices: " << size << '\n';
-  Polygon_u<N> ret{size};
-  std::transform(vs.begin(), vs.end(),
-                 ret.begin(),
-                 [&](const auto& v) { return t * v; });
+  Polygon_u<N> ret{vs.size()};
+  std::transform(vs.begin(), vs.end(), ret.begin(), [&](const auto& v) { return t * v; });
   return ret;
 }
 
 // apply a transformation to a vector of vertices
 template<size_t N>
 [[nodiscard]] inline auto transformed_ps(const Matrix<N>& t, const Polygons<N>& ps) {
-  auto size = ps.size();
-  Polygons<N> ret{size};
-  std::transform(std::execution::par_unseq,
-                 ps.begin(), ps.end(),
-                 ret.begin(),
-                 [&](const auto& vs) { return transformed_vs(t, vs); });
+  Polygons<N> ret{ps.size()};
+  std::transform(std::execution::par_unseq, ps.begin(), ps.end(), ret.begin(), [&](const auto& vs) { return transformed_vs(t, vs); });
   return ret;
 }
 
 // cross product, ignore the 4th component and set it to zero
 inline auto cross(const Vector<4>& a, const Vector<4>& b) {
-  return Vector<4>{{a[1] * b[2] - b[1] * a[2],
-                    a[2] * b[0] - b[2] * a[0],
-                    a[0] * b[1] - b[0] * a[1],
-                    0}};
+  return Vector<4>{{a[1] * b[2] - b[1] * a[2], a[2] * b[0] - b[2] * a[0], a[0] * b[1] - b[0] * a[1], 0}};
 }
 
 template<size_t N>
 auto normalize(const Vector<N>& a) {
-  double norm = std::sqrt(a * a);
+  double norm = std::sqrt(a * a); // square root of <a, a>
   Vector<N> b;
   std::transform(a.begin(), a.end(), b.begin(), [&](auto a) { return a / norm; });
   return b;
