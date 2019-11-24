@@ -156,7 +156,7 @@ auto displayFunc() {
 
 auto main(int argc, char* argv[]) -> int {
   std::ios_base::sync_with_stdio(false);
-  in_file.open(((argc == 2) ? argv[1] : "../Debug/lab3c.in")); // Lab3A.in, simple.in...
+  in_file.open(((argc == 2) ? argv[1] : "../Debug/Lab3C.in")); // Lab3A.in, simple.in...
   if (!in_file)
     return -1;
   std::string line;

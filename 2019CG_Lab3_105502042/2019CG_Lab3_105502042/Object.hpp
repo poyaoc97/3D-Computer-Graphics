@@ -22,7 +22,6 @@ public:
   auto to_polygons() const;
 
 private:
-  friend auto operator<<(std::ostream& out, const Object& obj) -> std::ostream&;
   auto get_v(const int i) const { return vertices[i - 1]; }
 };
 
