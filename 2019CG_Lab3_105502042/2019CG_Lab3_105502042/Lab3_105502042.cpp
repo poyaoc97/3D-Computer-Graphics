@@ -168,7 +168,7 @@ auto main(int argc, char* argv[]) -> int {
   // GLUT stuff
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
-  glutInitWindowPosition(1000, 100);
+  glutInitWindowPosition(100, 100);
   glutInitWindowSize(win_x, win_y);
   glutCreateWindow("Lab 3 Window");
   glutDisplayFunc(displayFunc);
