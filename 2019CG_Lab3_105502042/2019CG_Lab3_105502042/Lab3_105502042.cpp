@@ -7,13 +7,13 @@ std::ifstream in_file;
 int win_x, win_y;
 bool nobackfaces{false};
 
-inline auto process_scale(std::stringstream& ss) {
+auto process_scale(std::stringstream& ss) {
   double x, y, z;
   ss >> x >> y >> z;
   return scaling_m(x, y, z);
 }
 
-inline auto process_rotate(std::stringstream& ss) {
+auto process_rotate(std::stringstream& ss) {
   double x, y, z;
   ss >> x >> y >> z;
   if (x)
@@ -24,19 +24,19 @@ inline auto process_rotate(std::stringstream& ss) {
     return rotation_m(z);
 }
 
-inline auto process_translate(std::stringstream& ss) {
+auto process_translate(std::stringstream& ss) {
   double x, y, z;
   ss >> x >> y >> z;
   return translation_m(x, y, z);
 }
 
-inline auto process_viewport(std::stringstream& ss) {
+auto process_viewport(std::stringstream& ss) {
   double vxl, vxr, vyb, vyt;
   ss >> vxl >> vxr >> vyb >> vyt;
   return Viewport{(vxr - vxl) / (vyt - vyb), vxl, vxr, vyb, vyt, win_x, win_y};
 }
 
-inline auto process_object(std::stringstream& ss, const Matrix<4>& TM) {
+auto process_object(std::stringstream& ss, const Matrix<4>& TM) {
   // open asc file
   std::string asc_path;
   ss >> asc_path;
@@ -64,13 +64,13 @@ inline auto process_object(std::stringstream& ss, const Matrix<4>& TM) {
   return asc_obj;
 }
 
-inline auto process_observer(std::stringstream& ss) {
+auto process_observer(std::stringstream& ss) {
   double Ex, Ey, Ez, COIx, COIy, COIz, Tilt, Hither, Yon, Hav;
   ss >> Ex >> Ey >> Ez >> COIx >> COIy >> COIz >> Tilt >> Hither >> Yon >> Hav;
   return Observer{Ex, Ey, Ez, COIx, COIy, COIz, Tilt, Hither, Yon, Hav};
 }
 
-inline auto process_display(const Viewport& vp, const std::vector<Object>& objects, const Matrix<4>& pmXem) {
+auto process_display(const Viewport& vp, const std::vector<Object>& objects, const Matrix<4>& pmXem) {
   auto t0 = std::chrono::high_resolution_clock::now();
   // dump all faces of all objects to Polygons<4>
   Polygons<4> ps;
@@ -99,7 +99,7 @@ inline auto process_display(const Viewport& vp, const std::vector<Object>& objec
 }
 
 // simple hash function
-[[nodiscard]] constexpr auto operator""_hash(const char* s, const size_t count) {
+constexpr auto operator""_hash(const char* s, const size_t count) {
   return size_t{*s ^ count};
 }
 
