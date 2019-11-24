@@ -6,6 +6,8 @@
 1. [Observer.hpp](2019CG_Lab3_105502042/2019CG_Lab3_105502042/Observer.hpp)  
 1. [DrawKit.hpp](2019CG_Lab3_105502042/2019CG_Lab3_105502042/DrawKit.hpp)  
 1. [MatrixKit.hpp](2019CG_Lab3_105502042/2019CG_Lab3_105502042/MatrixKit.hpp)  
+## Demo
+[![demo](https://img.youtube.com/vi/FgfSL_YjRI8/0.jpg)](https://youtu.be/FgfSL_YjRI8)
 ## Requirement
 1. the latest Visual Studio 2017
 1. the latest Windows SDK
