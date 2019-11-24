@@ -1,5 +1,4 @@
 #pragma once
-#include <tuple>
 
 struct Viewport {
   double AR, vxl, vxr, vyb, vyt;

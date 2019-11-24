@@ -9,29 +9,27 @@ class Object {
   std::string file_name;
   size_t v_count;
   size_t f_count;
-  Polygon_u<4> vs;
+  std::vector<Vector<4>> vertices;
   std::vector<Face> faces;
 
 public:
-  explicit Object(std::string_view s, size_t v, size_t f) : file_name{s}, v_count{v}, f_count{f}, vs{v}, faces{f} {}
+  explicit Object(std::string_view s, size_t v, size_t f) : file_name{s}, v_count{v}, f_count{f}, vertices{v}, faces{f} {}
 
   auto set_vertex(std::stringstream& ss, std::ifstream& asc_file, const Matrix<4>& TM);
   auto set_face(std::stringstream& ss, std::ifstream& asc_file);
-
-  auto get_name() const { return file_name; }
 
   // turn faces into polygons
   auto to_polygons() const;
 
 private:
   friend auto operator<<(std::ostream& out, const Object& obj) -> std::ostream&;
-  auto get_v(const int i) const { return vs[i - 1]; }
+  auto get_v(const int i) const { return vertices[i - 1]; }
 };
 
 inline auto Object::set_vertex(std::stringstream& ss, std::ifstream& asc_file, const Matrix<4>& TM) {
   std::string line;
   double a, b, c;
-  auto it = vs.begin();
+  auto it = vertices.begin();
   for (size_t i = 0; i != v_count; ++i, ++it) {
     while (ss >> line)
       ;
@@ -77,20 +75,4 @@ inline auto Object::to_polygons() const {
     ++it;
   }
   return polygons;
-}
-
-inline auto operator<<(std::ostream& out, const Object& obj) -> std::ostream& {
-  out << "Object name: " << obj.file_name << '\n'
-      << "Vertex count: " << obj.v_count << '\n'
-      << "Face count: " << obj.f_count << "\n"
-      << obj.vs;
-
-  for (const auto& f : obj.faces) {
-    out << f.size() << '\t';
-    for (auto it = f.begin(); it != f.end(); ++it)
-      out << *it << ' ';
-    out << '\n';
-  }
-  out << "end of object print\n";
-  return out;
 }
