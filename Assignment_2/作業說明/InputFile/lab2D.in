@@ -1,0 +1,32 @@
+reset
+scale 0.5 0.5 
+rotate 0.0 
+translate -.3 -1.0
+square
+
+reset
+scale 1.5 1.5
+rotate 45.0 
+translate 0.6 -0.2
+square
+
+reset
+scale 0.5 0.5
+rotate 0.0
+translate -0.2 0.2
+square
+
+view -2.0 2.0 -2.0 2.0 100 400 100 400
+
+view 0.0 2.0 0.0 2.0 420 450 100 500
+
+view 0.0 2.0 0.0 2.0 600 650 200 300
+
+view -2.0 0.0 0.0 2.0 550 600 200 300
+
+view -2.0 0.0 -2.0 0.0 550 600 100 200
+
+view 0.0 2.0 -2.0 0.0 600 650 100 200
+
+end
+

@@ -1,0 +1,38 @@
+# create a square and its transformation
+reset
+scale 2.0 2.0
+rotate 45.0
+translate 10.0 10.0
+square
+
+# create a triangle and its transformation
+reset
+translate 5.0 5.0
+scale 0.5 0.5
+rotate 20.0
+triangle
+
+# 2 non-overlapping viewports
+view 0.0 20.0 0.0 20.0 10.0 40.0  10.0 40.0
+view 0.0 20.0 0.0 20.0 50.0 100.0 10.0 60.0
+
+# clear the openGL window
+clearScreen
+
+# display the world in one viewport
+view 0.0 10.0 0.0 10.0 10.0 40.0  10.0 40.0
+
+# clear data and screen
+clearData
+clearScreen
+
+# create a new square and it's transformation
+reset
+scale 5.0 5.0
+translate 5.0 5.0
+square
+
+# view the new square in a non-square viewport
+view 0.0 10.0 0.0 10.0 0.0 100.0 0.0 50.0
+
+end

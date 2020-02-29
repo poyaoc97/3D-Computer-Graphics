@@ -1,0 +1,36 @@
+500 500
+
+ambient 0.4 0.4 0.4
+viewport -1 1 -1 1
+scale 5.0 0.25 0.25
+object cube.asc 0.0 1.0 0.0 0.8  0.2  1
+
+reset
+scale 0.25 5.0 0.25
+object cube.asc 0.0 1.0 0.0 0.8  0.2  1
+
+reset
+scale 0.25 0.25 5.0 
+object cube.asc 0.0 1.0 0.0 0.8  0.2  1
+
+reset
+rotate 180.0 0.0 0.0
+translate -1.0 0.0 -1.0
+object Grid4x4.asc 1.0 0.0 0.0 0.8  0.2  1
+
+translate 2.0 0.0 0.0
+object Grid4x4.asc 1.0 0.0 0.0 0.8  0.2  1
+
+translate 0.0 0.0 2.0
+object Grid4x4.asc 1.0 0.0 0.0 0.8  0.2  1
+
+translate -2.0 0.0 0.0
+object Grid4x4.asc 1.0 0.0 0.0 0.8  0.2  1
+
+observer 10.0 10.0 10.0 0.0 0.0 0.0 0 .1 1000 10
+
+light 1 0.8 0.8 .8 0.0 10.0 0.0
+
+display
+
+end

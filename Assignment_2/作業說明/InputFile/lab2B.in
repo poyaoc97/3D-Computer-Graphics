@@ -1,0 +1,21 @@
+# create 4 triangles and place them such that
+# the assembly looks like a 4-winged fan
+
+reset
+translate 0.0 -1.0
+scale 0.5 1.0
+rotate 0.0
+triangle
+
+rotate 90.0
+triangle
+
+rotate 90.0
+triangle
+
+rotate 90.0
+triangle
+
+view -3.0 3.0 -3.0 3.0 0.0 100.0 0.0 100.0
+
+end
