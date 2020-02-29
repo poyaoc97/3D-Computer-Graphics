@@ -1,4 +1,4 @@
-# 3D-Computer-Graphics-Lab3 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b3c62815d857459a8732a9339be889de)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=rZhBoYao/3D-Computer-Graphics-Lab3&amp;utm_campaign=Badge_Grade) ![](https://img.shields.io/badge/language-C++17-blue.svg)
+# 3D-Computer-Graphics-Lab3![](https://img.shields.io/badge/language-C++17-blue.svg)
 ## Source files of interest
 1. [Lab3_105502042.cpp](2019CG_Lab3_105502042/2019CG_Lab3_105502042/Lab3_105502042.cpp)  
 1. [Viewport.hpp](2019CG_Lab3_105502042/2019CG_Lab3_105502042/Viewport.hpp)  
