@@ -1,4 +1,4 @@
-# 3D-Computer-Graphics-Lab2 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/db0e6313cb9c44eeb43e78438722eb5e)](https://www.codacy.com/manual/rZhBoYao/3D-Computer-Graphics-Lab2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=rZhBoYao/3D-Computer-Graphics-Lab2&amp;utm_campaign=Badge_Grade)
+# 3D-Computer-Graphics-Lab2 
 ## Source files of interest
 [Lab2_105502042.cpp](2019CG_Lab2_105502042/2019CG_Lab2_105502042/Lab2_105502042.cpp)  
 [my_utils.hpp](2019CG_Lab2_105502042/2019CG_Lab2_105502042/my_utils.hpp)
